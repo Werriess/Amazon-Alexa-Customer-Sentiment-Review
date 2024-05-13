@@ -9,3 +9,5 @@ pandas
 plotly
 gunicorn
 dash-tools
+scikit_learn
+numpy
