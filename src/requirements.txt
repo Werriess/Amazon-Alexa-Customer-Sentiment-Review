@@ -8,3 +8,4 @@ nltk
 pandas
 plotly
 gunicorn
+dash-tool
