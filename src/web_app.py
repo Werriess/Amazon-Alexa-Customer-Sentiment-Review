@@ -8,34 +8,29 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import re
 import string
+import contractions
+import dash_table
 
 # Load the model and vectorizer
-model = joblib.load("./Amazon-Customer-Sentiment-Review/artifacts/model1.pkl")
+model = joblib.load("./Amazon-Customer-Sentiment-Review/artifacts/model2.pkl")
 
 #initialise dash app
 app = dash.Dash(__name__)
 server = app.server
 
-input_ids = ['rating', 'date', 'variation', 'verified_reviews']
+# Sample DataFrame (replace this with your actual DataFrame)
+df = pd.DataFrame({
+    'rating': [5, 4, 3, 2, 1, 5],
+    'date': ['2024-05-01', '2024-05-02', '2024-05-03', '2024-05-04', '2024-05-05','2024-05-05'],
+    'variation': ['Charcoal Fabric', 'Walnut Finish', 'Heather Gray Fabric', 'Sandstone Fabric', 'Oak Finish', 'Sandstone Fabric'],
+    'verified_reviews': ['Love my Echo!', 'Sometimes while playing a game, you can answer a question correctly but Alexa says you got it wrong and answers the same as you.  I like being able to turn lights on and off while away from home.', 'Not what I expected', 'Disappointed', 'Worst purchase ever', 'MLG makes me tired!!']
+})
 
-variation_options = [
-    {'label': 'Charcoal Fabric', 'value': 'charcoal_fabric'},
-    {'label': 'Walnut Finish', 'value': 'walnut_finish'},
-    {'label': 'Heather Gray Fabric', 'value': 'heather_gray_fabric'},
-    {'label': 'Sandstone Fabric', 'value': 'sandstone_fabric'},
-    {'label': 'Oak Finish', 'value': 'oak_finish'},
-    {'label': 'Black', 'value': 'black'},
-    {'label': 'White', 'value': 'white'},
-    {'label': 'Black Spot', 'value': 'black_spot'}, 
-    {'label': 'White Spot', 'value': 'white_spot'}, 
-    {'label': 'Black Show', 'value': 'black_show'}, 
-    {'label': 'White Show', 'value': 'white_show'}, 
-    {'label': 'Black Plus', 'value': 'black_plus'}, 
-    {'label': 'White Plus', 'value': 'white_plus'}, 
-    {'label': 'Configuration: Fire TV Stick', 'value': 'fire_tv_stick'},
-    {'label': 'Black Dot', 'value': 'black_dot'},  
-    {'label': 'White Dot', 'value': 'white_dot'}, 
-]
+# Define columns for DataTable
+columns = [{"name": i, "id": i} for i in df.columns]
+
+variation_options = [{'label': variation, 'value': variation.lower().replace(' ', '_')} for variation in df['variation'].unique()]
+
 
 app.layout = html.Div(
     className='app-container', 
@@ -50,7 +45,7 @@ app.layout = html.Div(
                         'color': '#071e22',
                         'width': '500px',
                         'text-align': 'center'}),
-            html.Div( 
+        html.Div( 
             className='content',
             style = {'background-color' : '#071e22',
                     'color': 'white',
@@ -122,11 +117,56 @@ app.layout = html.Div(
                                         'margin-top':'10px',
                                         'margin-left':'25px'}),
                     html.Div(id='output-div')
-                ], className='review-section'),  
+                ], className='review-section'),
+                html.Div([
+                    html.H3('Amazon Reviews'),
+                    html.Div(
+                        dcc.Loading(
+                            id='loading-table',
+                            type='circle',
+                            children=[
+                                html.Div(
+                                    dash_table.DataTable(
+                                        id='review-table',
+                                        columns=columns,
+                                        data=df.to_dict('records'),
+                                        page_size=10,  # Set the number of rows per page
+                                        style_table={'overflowX': 'auto'},  # Enable horizontal scroll
+                                        style_cell={'minWidth': '150px', 'width': '150px', 'maxWidth': '150px'},  # Set column width
+                                        style_header={'backgroundColor': 'rgb(30, 30, 30)', 'color': 'white'},  # Set header style
+                                        style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white'},  # Set data style
+                                        row_selectable='single',  # Allow only single row selection
+                                        selected_rows=[]  # Initialize selected rows to empty list
+                                    )
+                                )
+                            ]
+                        )
+                    )
+                ], style={'overflowY': 'auto', 'height': '300px', 'margin-top': '20px', 'margin-left': '25px'})
             ]
         )
     ]
 )
+
+@app.callback(
+    Output(component_id='rating-slider', component_property='value'),
+    Output(component_id='date-picker', component_property='date'),
+    Output(component_id='variation-dropdown', component_property='value'),
+    Output(component_id='review-text', component_property='value'),
+    Input(component_id='review-table', component_property='selected_rows'),
+    State(component_id='review-table', component_property='data')
+)
+def update_inputs(selected_rows, data):
+    if selected_rows:
+        selected_row_index = selected_rows[0]
+        selected_row = data[selected_row_index]
+        rating = selected_row['rating']
+        date = selected_row['date']
+        variation = selected_row['variation']
+        review = selected_row['verified_reviews']
+        return rating, date, variation, review
+    else:
+        return 3, None, None, ''
 
 @app.callback(
     Output(component_id='output-div', component_property='children'),
@@ -223,4 +263,4 @@ def process(text):
     return processed_text
 
 if __name__ == '__main__':
-    app.run_server(debug = True)
+    app.run_server(port=8040, debug = True)
