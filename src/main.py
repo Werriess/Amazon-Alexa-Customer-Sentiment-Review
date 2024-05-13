@@ -9,28 +9,19 @@ def negate_sequence(text):
     negation = False
     delims = "?.,!:;"
     result = []
-    words = text.split()
-    prev = None
-    pprev = None
+    words = text.split()  # Split the text into words
     for word in words:
         stripped = word.strip(delims).lower()
-        negated = "not_" + stripped if negation else stripped
-        result.append(negated)
-        if prev:
-            bigram = prev + " " + negated
-            result.append(bigram)
-            if pprev:
-                trigram = pprev + " " + bigram
-                result.append(trigram)
-            pprev = prev
-        prev = negated
-
-        if any(neg in word for neg in ["not", "n't", "no"]):
+        if any(neg in stripped for neg in ["not", "n't", "no"]):
             negation = not negation
-
+            continue
+        if negation:
+            negated = "not_" + stripped
+        else:
+            negated = stripped
+        result.append(negated)
         if any(c in word for c in delims):
             negation = False
-
     return result
 
 def process(text):
@@ -68,4 +59,4 @@ def process(text):
     
     return processed_text
 
-print(process("I didn't perform"))
+print(process("Don't like it very much"))
