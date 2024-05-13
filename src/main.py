@@ -60,4 +60,3 @@ def process(text):
     return processed_text
 
 print(process("Don't like it very much"))
-WernerJvR-PC
