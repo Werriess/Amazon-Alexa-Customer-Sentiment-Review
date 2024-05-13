@@ -1,0 +1,9 @@
+dash==2.1.0
+dash-bootstrap-components
+dash-core-components
+dash-html-components
+dash-table
+joblib
+nltk
+pandas
+plotly
