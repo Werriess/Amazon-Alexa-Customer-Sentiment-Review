@@ -3,6 +3,9 @@ from dash import html, dcc, Input, Output, State
 import pandas as pd
 import joblib
 import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('vader_lexicon')
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import re
