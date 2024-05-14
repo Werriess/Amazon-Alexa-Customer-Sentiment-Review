@@ -6,6 +6,7 @@ import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('vader_lexicon')
+nltk.download('wordnet')
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import re
