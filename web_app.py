@@ -11,8 +11,8 @@ import contractions
 import dash_table
 
 
-model = joblib.load("Amazon-Customer-Sentiment-Review/artifacts/model2.pkl")
-vectorizer = joblib.load("Amazon-Customer-Sentiment-Review/artifacts/vectorizer2.pkl")
+model = joblib.load("./Amazon-Customer-Sentiment-Review/artifacts/model2.pkl")
+vectorizer = joblib.load("/.Amazon-Customer-Sentiment-Review/artifacts/vectorizer2.pkl")
 
 app = dash.Dash(__name__)
 server = app.server
