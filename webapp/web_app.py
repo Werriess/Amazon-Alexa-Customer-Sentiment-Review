@@ -1,4 +1,3 @@
-#libraries
 import dash
 from dash import html, dcc, Input, Output, State
 import pandas as pd
@@ -11,26 +10,35 @@ import string
 import contractions
 import dash_table
 
-# Load the model and vectorizer
-model = joblib.load("./Amazon-Customer-Sentiment-Review/artifacts/model2.pkl")
 
-#initialise dash app
+model = joblib.load("Amazon-Customer-Sentiment-Review/artifacts/model2.pkl")
+vectorizer = joblib.load("Amazon-Customer-Sentiment-Review/artifacts/vectorizer2.pkl")
+
 app = dash.Dash(__name__)
 server = app.server
 
-# Sample DataFrame (replace this with your actual DataFrame)
-df = pd.DataFrame({
-    'rating': [5, 4, 3, 2, 1, 5],
-    'date': ['2024-05-01', '2024-05-02', '2024-05-03', '2024-05-04', '2024-05-05','2024-05-05'],
-    'variation': ['Charcoal Fabric', 'Walnut Finish', 'Heather Gray Fabric', 'Sandstone Fabric', 'Oak Finish', 'Sandstone Fabric'],
-    'verified_reviews': ['Love my Echo!', 'Sometimes while playing a game, you can answer a question correctly but Alexa says you got it wrong and answers the same as you.  I like being able to turn lights on and off while away from home.', 'Not what I expected', 'Disappointed', 'Worst purchase ever', 'MLG makes me tired!!']
-})
+df = pd.read_csv("Amazon-Customer-Sentiment-Review/data/validation_data.csv")
 
-# Define columns for DataTable
 columns = [{"name": i, "id": i} for i in df.columns]
 
-variation_options = [{'label': variation, 'value': variation.lower().replace(' ', '_')} for variation in df['variation'].unique()]
-
+variation_options = [
+    {'label': 'Charcoal Fabric', 'value': 'charcoal_fabric'},
+    {'label': 'Walnut Finish', 'value': 'walnut_finish'},
+    {'label': 'Heather Gray Fabric', 'value': 'heather_gray_fabric'},
+    {'label': 'Sandstone Fabric', 'value': 'sandstone_fabric'},
+    {'label': 'Oak Finish', 'value': 'oak_finish'},
+    {'label': 'Black', 'value': 'black'},
+    {'label': 'White', 'value': 'white'},
+    {'label': 'Black Spot', 'value': 'black_spot'},
+    {'label': 'White Spot', 'value': 'white_spot'},
+    {'label': 'Black Show', 'value': 'black_show'},
+    {'label': 'White Show', 'value': 'white_show'},
+    {'label': 'Black Plus', 'value': 'black_plus'},
+    {'label': 'White Plus', 'value': 'white_plus'},
+    {'label': 'Configuration: Fire TV Stick', 'value': 'fire_tv_stick'},
+    {'label': 'Black Dot', 'value': 'black_dot'},
+    {'label': 'White Dot', 'value': 'white_dot'}
+]
 
 app.layout = html.Div(
     className='app-container', 
@@ -62,7 +70,7 @@ app.layout = html.Div(
                         min=1,
                         max=5,
                         step=1,
-                        value=3,  # Set default value here
+                        value=3, 
                         marks={i: str(i) for i in range(1, 6)},
                     )
                 ], className='rating-container',
@@ -130,19 +138,19 @@ app.layout = html.Div(
                                         id='review-table',
                                         columns=columns,
                                         data=df.to_dict('records'),
-                                        page_size=10,  # Set the number of rows per page
-                                        style_table={'overflowX': 'auto'},  # Enable horizontal scroll
-                                        style_cell={'minWidth': '150px', 'width': '150px', 'maxWidth': '150px'},  # Set column width
-                                        style_header={'backgroundColor': 'rgb(30, 30, 30)', 'color': 'white'},  # Set header style
-                                        style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white'},  # Set data style
-                                        row_selectable='single',  # Allow only single row selection
-                                        selected_rows=[]  # Initialize selected rows to empty list
+                                        page_size=10,  
+                                        style_table={'overflowX': 'auto'},  
+                                        style_cell={'minWidth': '150px', 'width': '150px', 'maxWidth': '150px'},  
+                                        style_header={'backgroundColor': 'rgb(30, 30, 30)', 'color': 'white'},  
+                                        style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white'},  
+                                        row_selectable='single',  
+                                        selected_rows=[]  
                                     )
                                 )
                             ]
                         )
                     )
-                ], style={'overflowY': 'auto', 'height': '300px', 'margin-top': '20px', 'margin-left': '25px'})
+                ], style={'overflowY': 'auto', 'height': '250px', 'margin-top': '20px', 'margin-left': '25px'})
             ]
         )
     ]
@@ -174,17 +182,13 @@ def update_inputs(selected_rows, data):
     State('review-text', 'value')
 )
 def update_output(n_clicks, review_text):
-    if n_clicks > 0 and review_text:  # Check if review text is not empty
-        # Preprocess the review text
+    if n_clicks > 0 and review_text:  
         processed_text = process(review_text)
 
-        # Vectorize the processed text
         vectorized_text = vectorizer.transform([processed_text])
 
-        # Make predictions
         predicted_sentiment = model.predict(vectorized_text)[0]
 
-        # Interpret results
         if predicted_sentiment == -1:
             sentiment = "Negative Sentiment"
         elif predicted_sentiment == 0:
@@ -228,24 +232,42 @@ def negate_sequence(text):
     return result
 
 def process(text):
-    # Convert text to lower case
     text = text.lower()
     
-    # Remove all punctuation in text
     text = text.translate(str.maketrans('', '', string.punctuation))
     
-    # Remove HTML code or URL links
+    def remove_emojis(text):
+        emoji_pattern = re.compile("["
+                        u"\U0001F600-\U0001F64F"  
+                        u"\U0001F300-\U0001F5FF"  
+                        u"\U0001F680-\U0001F6FF"  
+                        u"\U0001F1E0-\U0001F1FF"  
+                        u"\U00002500-\U00002BEF"  
+                        u"\U00002702-\U000027B0"
+                        u"\U00002702-\U000027B0"
+                        u"\U000024C2-\U0001F251"
+                        u"\U0001f926-\U0001f937"
+                        u"\U00010000-\U0010ffff"
+                        u"\u2640-\u2642"
+                        u"\u2600-\u2B55"
+                        u"\u200d"
+                        u"\u23cf"
+                        u"\u23e9"
+                        u"\u231a"
+                        u"\ufe0f"  
+                        u"\u3030"
+                        "]+", flags=re.UNICODE)
+        return emoji_pattern.sub(r'', text)
+    
+    text = remove_emojis(text)
     text = re.sub(r'^https?:\/\/.*[\r\n]*', '', text, flags=re.MULTILINE)
     
-    # Fix abbreviated words
     text = contractions.fix(text)
     
-    # Tokenize and handle negation
     tokens = negate_sequence(text)
     
     lemmatizer = WordNetLemmatizer()
     
-    # Remove stop words
     stop_words = set(stopwords.words('english'))
     
     lemmatized_tokens = []
@@ -254,7 +276,6 @@ def process(text):
         if token in stop_words:
             continue
         
-        # Lemmatization
         lemma = lemmatizer.lemmatize(token)
         lemmatized_tokens.append(lemma)
         
@@ -263,4 +284,4 @@ def process(text):
     return processed_text
 
 if __name__ == '__main__':
-    app.run_server(port=8040, debug = True)
+    app.run_server(port=8010, debug = True)
