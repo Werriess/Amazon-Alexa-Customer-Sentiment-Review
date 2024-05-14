@@ -284,4 +284,4 @@ def process(text):
     return processed_text
 
 if __name__ == '__main__':
-    app.run_server(port=8010, debug = True)
+    app.run_server(debug = True)
