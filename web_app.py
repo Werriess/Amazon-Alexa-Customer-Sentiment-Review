@@ -11,13 +11,13 @@ import contractions
 import dash_table
 
 
-model = joblib.load("./artifacts/model2.pkl")
-vectorizer = joblib.load("./artifacts/vectorizer2.pkl")
+model = joblib.load("artifacts/model2.pkl")
+vectorizer = joblib.load("artifacts/vectorizer2.pkl")
 
 app = dash.Dash(__name__)
 server = app.server
 
-df = pd.read_csv("Amazon-Customer-Sentiment-Review/data/validation_data.csv")
+df = pd.read_csv("data/validation_data.csv")
 
 columns = [{"name": i, "id": i} for i in df.columns]
 
