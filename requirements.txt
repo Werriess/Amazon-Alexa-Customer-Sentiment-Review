@@ -2,3 +2,4 @@ dash==2.16.1
 pandas==2.2.2
 joblib==1.4.0
 nltk==3.8.1
+gunicorn
